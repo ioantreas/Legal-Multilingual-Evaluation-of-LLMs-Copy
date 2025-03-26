@@ -242,7 +242,7 @@ class Multi_Eurlex(Dataset):
             "Length": len(true_labels)
         }
 
-    def normalize_labels(label_list):
+    def normalize_labels(self, label_list):
         normalized = []
         for labels in label_list:
             if labels is None:
