@@ -242,20 +242,22 @@ class Multi_Eurlex(Dataset):
             "Length": len(true_labels)
         }
 
-    def normalize_labels(self, label_list):
+    def normalize_labels(label_list):
         normalized = []
         for labels in label_list:
-            if isinstance(labels, str):
+            if labels is None:
+                normalized.append([])
+            elif isinstance(labels, str):
                 if labels.strip().lower() == "none" or labels.strip() == "":
                     normalized.append([])
                 else:
-                    # Convert string "1, 2" → [1, 2]
-                    normalized.append([int(x.strip()) for x in labels.split(",")])
+                    normalized.append([int(x.strip()) for x in labels.split(",") if x.strip().isdigit()])
             elif isinstance(labels, list):
                 normalized.append(labels)
             else:
                 raise ValueError(f"Unrecognized label format: {labels}")
         return normalized
+
 
     def evaluate_results(self, results, all_true, all_predicted):
         # Print out the results for each language
