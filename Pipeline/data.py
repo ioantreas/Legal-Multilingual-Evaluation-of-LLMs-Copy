@@ -53,20 +53,18 @@ class Dataset:
         """
         if name.lower() == 'multi_eurlex':
             return Multi_Eurlex(llm_judge)
-        elif name.lower() == 'go_emotions':
-            return Go_Emotions()
-        elif name.lower() == 'casehold':
-            return CaseHOLD()
-        elif name.lower() == 'xnli':
-            return XNLI()
         elif name.lower() == 'eur_lex_sum':
             return Eur_Lex_Sum()
-        # elif name.lower() == 'multi_legal_pile':
-        #     return Multi_Legal_Pile()
+        elif name.lower() == 'casehold':
+            return CaseHOLD()
         elif name.lower() == 'europa_random_split':
             return Europa_Random_Split()
         elif name.lower() == 'xquad':
             return XQuAD(llm_judge)
+        elif name.lower() == 'xnli':
+            return XNLI()
+        elif name.lower() == 'go_emotions':
+            return Go_Emotions()
         elif name.lower() == 'sst2':
             return SST2()
         elif name.lower() == 'qqp':
@@ -96,6 +94,10 @@ class Dataset:
                 relevant_labels.append(i)
         return relevant_labels
 
+
+    ###########################################################################################
+    ###################################### Legal Datasets #####################################
+    ###########################################################################################
 
 class Multi_Eurlex(Dataset):
     """
@@ -426,81 +428,6 @@ class Eur_Lex_Sum(Dataset):
 
         return labels
 
-
-class Go_Emotions(Dataset):
-    """
-    Child class of Dataset representing the GoEmotions dataset.
-    """
-
-    def __init__(self):
-        self.label_options = [
-            "admiration", "amusement", "anger", "annoyance", "approval",
-            "caring", "confusion", "curiosity", "desire", "disappointment",
-            "disapproval", "disgust", "embarrassment", "excitement", "fear",
-            "gratitude", "grief", "joy", "love", "nervousness", "optimism",
-            "pride", "realization", "relief", "remorse", "sadness", "surprise"
-        ]
-        self.prompt = "<|endoftext|>" + (
-                "Question: Which of the following emotions apply to this text? (You can select more than one): "
-                + ', '.join(self.label_options) + " "
-                                                  "Answer:"
-        )
-
-    def get_data(self, language=None):
-        """
-        Loads the GoEmotions dataset.
-        :return: the data and label options
-        """
-        dataset = load_dataset('go_emotions', split='test')
-        return self.extract_text(dataset)
-
-    def extract_text(self, dataset):
-        """
-        Extracts and formats the data from the GoEmotions dataset.
-        :param dataset: the dataset containing the text data
-        :return: a list of text data and labels
-        """
-        data = []
-        count = 0
-        for item in dataset:
-            if count == 50:
-                break
-            count += 1
-            data.append({"text": item['text'], "labels": item['labels']})
-        return data
-
-    def get_true_labels(self, data):
-        """
-        :param data: list of data entries
-        :return: list of true labels for the dataset
-        """
-        true_labels = [entry['labels'] for entry in data]
-        return true_labels
-
-    def evaluate(self, true_labels, predicted_labels):
-        """
-        Evaluates the model using precision, recall, and F1 score.
-        :param true_labels: list of true labels
-        :param predicted_labels: list of predicted labels
-        """
-        mlb = MultiLabelBinarizer(classes=list(range(len(self.label_options))))
-
-        binary_true = mlb.fit_transform(true_labels)
-        binary_pred = mlb.transform(predicted_labels)
-
-        relevant_labels = np.where((binary_true.sum(axis=0) + binary_pred.sum(axis=0)) > 0)[0]
-        filtered_binary_true = binary_true[:, relevant_labels]
-        filtered_binary_pred = binary_pred[:, relevant_labels]
-
-        precision, recall, f1, _ = precision_recall_fscore_support(
-            filtered_binary_true, filtered_binary_pred, average='macro', zero_division=0
-        )
-
-        print(f"Precision: {precision}")
-        print(f"Recall: {recall}")
-        print(f"F1 Score: {f1}")
-
-
 class CaseHOLD(Dataset):
     """
     Child class of Dataset representing the CaseHOLD dataset.
@@ -580,213 +507,6 @@ class CaseHOLD(Dataset):
             print(match)
             return match.group(1)  # Return the first matched capital letter
         return ["F"]
-
-
-class XNLI(Dataset):
-    """
-    Child class of Dataset representing the XNLI dataset.
-    """
-    def __init__(self):
-        self.label_options = ["0", "1", "2"]
-        self.languages = ["ar", "bg", "de", "el", "en", "es", "fr", "hi", "ru", "sw", "th", "tr", "ur", "vi", "zh"]
-        self.prompt = ("<|endoftext|>\nTask: Please identify whether the premise entails or contradicts "
-                           "the hypothesis, or neither. The answer should be '0' for entailment, "
-                           "'1' for neither, or '2' for contradiction. The answer should be exactly '0', '1', or '2'."
-                           )
-
-    def get_data(self, language, dataset_name, points):
-        """
-        Loads the XNLI dataset for the specified language.
-        :param language: the language of the dataset
-        :return: the data and label options
-        """
-        dataset = load_dataset('xnli', language, split='test', trust_remote_code=True)
-        self.language = language
-        if language == 'all_languages':
-            data = self.extract_text_all_languages(dataset)
-        else:
-            data = self.extract_text(dataset, points)
-        return data, self.label_options, translate(language, self.prompt)[0]
-
-    def extract_text_all_languages(self, dataset):
-        """
-        :param dataset: the dataset containing the text data
-        :return: a list of text data from all languages
-        """
-        data = []
-        count = 0
-        for item in dataset:
-            if count == 5:
-                break
-            documents = item['text']
-            texts = documents.keys()
-            data.append({"text:": text, "labels": item['labels']} for text in texts)
-            count += 1
-
-    def extract_text(self, dataset, points):
-        """
-        :param dataset: the dataset containing the text data
-        :return: a list of text data in the specified language
-        """
-        data = []
-        count = 0
-        for item in dataset:
-            if count == points:
-                break
-            translator = GoogleTranslator(source="en", target=self.language)
-            if self.language == "ar":
-                text = item["hypothesis"] + translator.translate("Hypothesis: ") + item["premise"] + translator.translate("Premise: ")
-            else:
-                text = translator.translate("Premise: ") + item["premise"] + translator.translate(" Hypothesis: ") + item["hypothesis"]
-            data.append({"text": text, "label": item['label']})
-            count += 1
-        return data
-
-    def evaluate(self, true_labels, predicted_labels):
-        """
-        Evaluates the model using precision, recall, F1 score, and accuracy.
-        :param true_labels: list of true labels
-        :param predicted_labels: list of predicted labels
-        """
-        accuracy = accuracy_score(true_labels, predicted_labels)
-        file_path = "XNLI_evaluation.csv"
-        file_exists = os.path.isfile(file_path)
-        with open(file_path, mode='a', newline='') as f:
-            writer = csv.writer(f)
-            if not file_exists:
-                writer.writerow(["Language", "Accuracy"])
-            writer.writerow([self.language, accuracy])
-
-        print(f"Accuracy {self.language}: {accuracy}")
-
-    import re
-
-    def extract_labels_from_generated_text(self, generated_texts):
-        """
-        Extracts the first predicted label (0, 1, or 2) from the model's response.
-        :param generated_texts: List of generated model outputs.
-        :return: List of extracted labels (0, 1, 2), or None if no valid label is found.
-        """
-        word_to_digit = {"zero": 0, "one": 1, "two": 2}  # Handle word numbers
-        all_labels = []
-
-        print(generated_texts)
-
-        for text in generated_texts:
-            if text is not None:
-                text_lower = text.lower()
-
-                # Remove punctuation for easier matching
-                text_lower = re.sub(r"[^\w\s]", "", text_lower)
-
-                # Try to find exact numbers first
-                match = re.findall(r"\b(0|1|2)\b", text_lower)
-
-                if match:
-                    all_labels.append(int(match[0]))  # Extract first match
-                    continue  # Skip to next iteration
-
-                # Try matching word numbers ("zero", "one", "two")
-                for word, digit in word_to_digit.items():
-                    if re.search(rf"\b{word}\b", text_lower):
-                        all_labels.append(digit)
-                        break  # Stop after first valid match
-                else:
-                    all_labels.append(None)  # No valid label found
-            else:
-                all_labels.append(None)
-
-        return all_labels
-
-
-
-    def get_true(self, data):
-        """
-        :return: A list of true labels for the dataset
-        """
-        return [entry['label'] for entry in data]
-
-# class Multi_Legal_Pile(Dataset):
-#     """
-#     Child class of Dataset representing the Eur-Lex-sum dataset.
-#     """
-#
-#     def __init__(self):
-#         self.prompt = "\n<|endoftext|>\nTask: Summarize the text above. Include all the important information."
-#
-#     def get_data(self, language, dataset_name, points_per_language):
-#         """
-#         :param language: the language for which data should be retrieved
-#         :return: the data corresponding to the language parameter
-#         """
-#         config = f"{language}_legal-mc4"
-#         dataset = load_dataset('joelniklaus/Multi_Legal_Pile', config, streaming=True, split='train', trust_remote_code=True)
-#         limited_data = list(islice(dataset, points_per_language))
-#         print(limited_data[0])
-#         self.language = language
-#         data = self.extract_text(limited_data, points_per_language)
-#         inst = translate(language, self.prompt)
-#         return data, inst[0]
-#
-#     def extract_text(self, dataset, points_per_language):
-#         """
-#         :param dataset: the dataset containing the text data
-#         :return: a list of text data in the specified language
-#         """
-#         data = []
-#         count = 0
-#         for item in dataset:
-#             if count == points_per_language:
-#                 break
-#             data.append({"text": item['reference'], "summary": item['summary']})
-#             count += 1
-#         return data
-#
-#     def get_true(self, data):
-#         """
-#         :return: the true summary of the data
-#         """
-#         summary = [entry['summary'] for entry in data]
-#         return summary
-#
-#     def format_text_to_width(self, text, width):
-#         """
-#         Splits a text into lines of a given width.
-#         """
-#         return "<br>".join(textwrap.wrap(text, width))
-#
-#     def evaluate(self, references, predictions):
-#         rouge = evaluate.load("rouge", cache_dir=f"/tmp/huggingface_cache/{os.getpid()}")
-#
-#         results = rouge.compute(predictions=predictions, references=references)
-#
-#         file_path = "output/Eur_Lex_Sum_evaluation.md"
-#         file_exists = os.path.isfile(file_path)
-#         with open(file_path, mode='a', encoding='utf-8') as f:
-#             if not file_exists:
-#                 f.write("| Language | Reference Summary                          | Predicted Summary                           |\n")
-#                 f.write("|----------|------------------------------------------|--------------------------------------------|\n")
-#             count = 0
-#             for reference, prediction in zip(references, predictions):
-#                 # Wrap text to fit within 50 characters
-#                 formatted_reference = self.format_text_to_width(reference, 50)
-#                 formatted_prediction = self.format_text_to_width(prediction, 50)
-#                 # Write formatted text into md table
-#                 f.write(f"| {self.language} | {formatted_reference} | {formatted_prediction} |\n")
-#                 count += 1
-#                 if count == 3:
-#                     break
-#
-#         return results
-#
-#     def evaluate_results(self, results, all_true, all_predicted):
-#         # Print out the results for each language
-#         for lang, metrics in results.items():
-#             print(f"Results for {lang}:")
-#             print(f"Rouge1: {metrics['rouge1']}")
-#             print(f"Rouge2: {metrics['rouge2']}")
-#             print(f"RougeL: {metrics['rougeL']}")
-#             print("-------------------------------------------------------------")
 
 
 class Europa_Random_Split(Dataset):
@@ -960,6 +680,11 @@ class Europa_Random_Split(Dataset):
         for language, scores in results.items():
             print(f"{language}: {scores}")
         print("-" * 40)
+
+
+    ###########################################################################################
+    ################################## Non-Legal Datasets #####################################
+    ###########################################################################################
 
 class XQuAD(Dataset):
     """
@@ -1161,8 +886,203 @@ class XQuAD(Dataset):
                 print(f"Cosine Similarity: {metrics['Cosine Similarity']}")
 
 
+class XNLI(Dataset):
+    """
+    Child class of Dataset representing the XNLI dataset.
+    """
+    def __init__(self):
+        self.label_options = ["0", "1", "2"]
+        self.languages = ["ar", "bg", "de", "el", "en", "es", "fr", "hi", "ru", "sw", "th", "tr", "ur", "vi", "zh"]
+        self.prompt = ("<|endoftext|>\nTask: Please identify whether the premise entails or contradicts "
+                       "the hypothesis, or neither. The answer should be '0' for entailment, "
+                       "'1' for neither, or '2' for contradiction. The answer should be exactly '0', '1', or '2'."
+                       )
+
+    def get_data(self, language, dataset_name, points):
+        """
+        Loads the XNLI dataset for the specified language.
+        :param language: the language of the dataset
+        :return: the data and label options
+        """
+        dataset = load_dataset('xnli', language, split='test', trust_remote_code=True)
+        self.language = language
+        if language == 'all_languages':
+            data = self.extract_text_all_languages(dataset)
+        else:
+            data = self.extract_text(dataset, points)
+        return data, self.label_options, translate(language, self.prompt)[0]
+
+    def extract_text_all_languages(self, dataset):
+        """
+        :param dataset: the dataset containing the text data
+        :return: a list of text data from all languages
+        """
+        data = []
+        count = 0
+        for item in dataset:
+            if count == 5:
+                break
+            documents = item['text']
+            texts = documents.keys()
+            data.append({"text:": text, "labels": item['labels']} for text in texts)
+            count += 1
+
+    def extract_text(self, dataset, points):
+        """
+        :param dataset: the dataset containing the text data
+        :return: a list of text data in the specified language
+        """
+        data = []
+        count = 0
+        for item in dataset:
+            if count == points:
+                break
+            translator = GoogleTranslator(source="en", target=self.language)
+            if self.language == "ar":
+                text = item["hypothesis"] + translator.translate("Hypothesis: ") + item["premise"] + translator.translate("Premise: ")
+            else:
+                text = translator.translate("Premise: ") + item["premise"] + translator.translate(" Hypothesis: ") + item["hypothesis"]
+            data.append({"text": text, "label": item['label']})
+            count += 1
+        return data
+
+    def evaluate(self, true_labels, predicted_labels):
+        """
+        Evaluates the model using precision, recall, F1 score, and accuracy.
+        :param true_labels: list of true labels
+        :param predicted_labels: list of predicted labels
+        """
+        accuracy = accuracy_score(true_labels, predicted_labels)
+        file_path = "XNLI_evaluation.csv"
+        file_exists = os.path.isfile(file_path)
+        with open(file_path, mode='a', newline='') as f:
+            writer = csv.writer(f)
+            if not file_exists:
+                writer.writerow(["Language", "Accuracy"])
+            writer.writerow([self.language, accuracy])
+
+        print(f"Accuracy {self.language}: {accuracy}")
+
+    import re
+
+    def extract_labels_from_generated_text(self, generated_texts):
+        """
+        Extracts the first predicted label (0, 1, or 2) from the model's response.
+        :param generated_texts: List of generated model outputs.
+        :return: List of extracted labels (0, 1, 2), or None if no valid label is found.
+        """
+        word_to_digit = {"zero": 0, "one": 1, "two": 2}  # Handle word numbers
+        all_labels = []
+
+        print(generated_texts)
+
+        for text in generated_texts:
+            if text is not None:
+                text_lower = text.lower()
+
+                # Remove punctuation for easier matching
+                text_lower = re.sub(r"[^\w\s]", "", text_lower)
+
+                # Try to find exact numbers first
+                match = re.findall(r"\b(0|1|2)\b", text_lower)
+
+                if match:
+                    all_labels.append(int(match[0]))  # Extract first match
+                    continue  # Skip to next iteration
+
+                # Try matching word numbers ("zero", "one", "two")
+                for word, digit in word_to_digit.items():
+                    if re.search(rf"\b{word}\b", text_lower):
+                        all_labels.append(digit)
+                        break  # Stop after first valid match
+                else:
+                    all_labels.append(None)  # No valid label found
+            else:
+                all_labels.append(None)
+
+        return all_labels
 
 
+
+    def get_true(self, data):
+        """
+        :return: A list of true labels for the dataset
+        """
+        return [entry['label'] for entry in data]
+
+
+class Go_Emotions(Dataset):
+    """
+    Child class of Dataset representing the GoEmotions dataset.
+    """
+
+    def __init__(self):
+        self.label_options = [
+            "admiration", "amusement", "anger", "annoyance", "approval",
+            "caring", "confusion", "curiosity", "desire", "disappointment",
+            "disapproval", "disgust", "embarrassment", "excitement", "fear",
+            "gratitude", "grief", "joy", "love", "nervousness", "optimism",
+            "pride", "realization", "relief", "remorse", "sadness", "surprise"
+        ]
+        self.prompt = "<|endoftext|>" + (
+                "Question: Which of the following emotions apply to this text? (You can select more than one): "
+                + ', '.join(self.label_options) + " "
+                                                  "Answer:"
+        )
+
+    def get_data(self, language=None):
+        """
+        Loads the GoEmotions dataset.
+        :return: the data and label options
+        """
+        dataset = load_dataset('go_emotions', split='test')
+        return self.extract_text(dataset)
+
+    def extract_text(self, dataset):
+        """
+        Extracts and formats the data from the GoEmotions dataset.
+        :param dataset: the dataset containing the text data
+        :return: a list of text data and labels
+        """
+        data = []
+        count = 0
+        for item in dataset:
+            if count == 50:
+                break
+            count += 1
+            data.append({"text": item['text'], "labels": item['labels']})
+        return data
+
+    def get_true_labels(self, data):
+        """
+        :param data: list of data entries
+        :return: list of true labels for the dataset
+        """
+        true_labels = [entry['labels'] for entry in data]
+        return true_labels
+
+    def evaluate(self, true_labels, predicted_labels):
+        """
+        Evaluates the model using precision, recall, and F1 score.
+        :param true_labels: list of true labels
+        :param predicted_labels: list of predicted labels
+        """
+        mlb = MultiLabelBinarizer(classes=list(range(len(self.label_options))))
+
+        binary_true = mlb.fit_transform(true_labels)
+        binary_pred = mlb.transform(predicted_labels)
+
+        relevant_labels = np.where((binary_true.sum(axis=0) + binary_pred.sum(axis=0)) > 0)[0]
+        filtered_binary_true = binary_true[:, relevant_labels]
+        filtered_binary_pred = binary_pred[:, relevant_labels]
+
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            filtered_binary_true, filtered_binary_pred, average='macro', zero_division=0
+        )
+
+        print(f"Precision: {precision}")
+        print(f"Recall: {recall}")
+        print(f"F1 Score: {f1}")
 
 
 """
