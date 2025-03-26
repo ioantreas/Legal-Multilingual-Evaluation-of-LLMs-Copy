@@ -1,1 +1,268 @@
-
+Saved predictions to: predicted.json
+Saved predictions to: predicted_1.json
+Results for el:
+Precision: 0.1111111111111111
+Recall: 0.1111111111111111
+F1 Score: 0.1111111111111111
+Length: 2
+ENDMETRICS
+politics Precision: 0
+politics Recall: 0
+politics F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+international relations Precision: 0
+international relations Recall: 0
+international relations F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+european union Precision: 0.0
+european union Recall: 0
+european union F1 Score: 0
+True Num: 0
+Predicted Num: 1
+ENDCLASS
+law Precision: 1.0
+law Recall: 1.0
+law F1 Score: 1.0
+True Num: 1
+Predicted Num: 1
+ENDCLASS
+economics Precision: 0.0
+economics Recall: 0
+economics F1 Score: 0
+True Num: 0
+Predicted Num: 1
+ENDCLASS
+trade Precision: 0
+trade Recall: 0.0
+trade F1 Score: 0
+True Num: 1
+Predicted Num: 0
+ENDCLASS
+finance Precision: 0
+finance Recall: 0.0
+finance F1 Score: 0
+True Num: 1
+Predicted Num: 0
+ENDCLASS
+social questions Precision: 0
+social questions Recall: 0
+social questions F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+education and communications Precision: 0
+education and communications Recall: 0
+education and communications F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+science Precision: 0
+science Recall: 0
+science F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+business and competition Precision: 0
+business and competition Recall: 0
+business and competition F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+employment and working conditions Precision: 0
+employment and working conditions Recall: 0
+employment and working conditions F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+transport Precision: 0
+transport Recall: 0
+transport F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+environment Precision: 0
+environment Recall: 0
+environment F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+agriculture, forestry and fisheries Precision: 0.0
+agriculture, forestry and fisheries Recall: 0
+agriculture, forestry and fisheries F1 Score: 0
+True Num: 0
+Predicted Num: 1
+ENDCLASS
+agri-foodstuffs Precision: 0.0
+agri-foodstuffs Recall: 0.0
+agri-foodstuffs F1 Score: 0
+True Num: 1
+Predicted Num: 1
+ENDCLASS
+production, technology and research Precision: 0
+production, technology and research Recall: 0
+production, technology and research F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+energy Precision: 0
+energy Recall: 0.0
+energy F1 Score: 0
+True Num: 1
+Predicted Num: 0
+ENDCLASS
+industry Precision: 0
+industry Recall: 0.0
+industry F1 Score: 0
+True Num: 2
+Predicted Num: 0
+ENDCLASS
+geography Precision: 0
+geography Recall: 0
+geography F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+international organisations Precision: 0
+international organisations Recall: 0
+international organisations F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+ENDLANGUAGE
+Results for en:
+Precision: 0.125
+Recall: 0.16666666666666666
+F1 Score: 0.13888888888888887
+Length: 2
+ENDMETRICS
+politics Precision: 0.0
+politics Recall: 0
+politics F1 Score: 0
+True Num: 0
+Predicted Num: 1
+ENDCLASS
+international relations Precision: 0.0
+international relations Recall: 0
+international relations F1 Score: 0
+True Num: 0
+Predicted Num: 1
+ENDCLASS
+european union Precision: 0.0
+european union Recall: 0
+european union F1 Score: 0
+True Num: 0
+Predicted Num: 2
+ENDCLASS
+law Precision: 0.5
+law Recall: 1.0
+law F1 Score: 0.6666666666666666
+True Num: 1
+Predicted Num: 2
+ENDCLASS
+economics Precision: 0.0
+economics Recall: 0
+economics F1 Score: 0
+True Num: 0
+Predicted Num: 1
+ENDCLASS
+trade Precision: 1.0
+trade Recall: 1.0
+trade F1 Score: 1.0
+True Num: 1
+Predicted Num: 1
+ENDCLASS
+finance Precision: 0
+finance Recall: 0.0
+finance F1 Score: 0
+True Num: 1
+Predicted Num: 0
+ENDCLASS
+social questions Precision: 0
+social questions Recall: 0
+social questions F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+education and communications Precision: 0
+education and communications Recall: 0
+education and communications F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+science Precision: 0
+science Recall: 0
+science F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+business and competition Precision: 0
+business and competition Recall: 0
+business and competition F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+employment and working conditions Precision: 0
+employment and working conditions Recall: 0
+employment and working conditions F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+transport Precision: 0
+transport Recall: 0
+transport F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+environment Precision: 0
+environment Recall: 0
+environment F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+agriculture, forestry and fisheries Precision: 0.0
+agriculture, forestry and fisheries Recall: 0
+agriculture, forestry and fisheries F1 Score: 0
+True Num: 0
+Predicted Num: 2
+ENDCLASS
+agri-foodstuffs Precision: 0.0
+agri-foodstuffs Recall: 0.0
+agri-foodstuffs F1 Score: 0
+True Num: 1
+Predicted Num: 1
+ENDCLASS
+production, technology and research Precision: 0
+production, technology and research Recall: 0
+production, technology and research F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+energy Precision: 0
+energy Recall: 0.0
+energy F1 Score: 0
+True Num: 1
+Predicted Num: 0
+ENDCLASS
+industry Precision: 0
+industry Recall: 0.0
+industry F1 Score: 0
+True Num: 2
+Predicted Num: 0
+ENDCLASS
+geography Precision: 0
+geography Recall: 0
+geography F1 Score: 0
+True Num: 0
+Predicted Num: 0
+ENDCLASS
+international organisations Precision: 0.0
+international organisations Recall: 0
+international organisations F1 Score: 0
+True Num: 0
+Predicted Num: 1
+ENDCLASS
+ENDLANGUAGE

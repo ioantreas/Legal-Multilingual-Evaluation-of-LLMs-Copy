@@ -52,7 +52,7 @@ class Dataset:
         :return: the dataset object
         """
         if name.lower() == 'multi_eurlex':
-            return Multi_Eurlex()
+            return Multi_Eurlex(llm_judge)
         elif name.lower() == 'go_emotions':
             return Go_Emotions()
         elif name.lower() == 'casehold':
@@ -104,10 +104,11 @@ class Multi_Eurlex(Dataset):
 
     label_options = None
 
-    def __init__(self):
-        self.prompt = ("<|endoftext|>Question: Which of the following labels apply? Only answer with the numbers of "
-                       "the labels that are relevant and no"
-                       "further explanation! (You can select more than one): ")
+    def __init__(self, llm_judge):
+        self.prompt = ("<|endoftext|>Question: Above you are given a text. Your task is to annotate the text using the following "
+                       "labels. You can select multiple labels but only include the relevant labels. Only answer with "
+                       "the number of the labels that are relevant and nothing else! (You can select more than one): ")
+        self.llm_judge = llm_judge
 
     def load_label_options(self, lang_code):
         with open("output/eurovoc_categories.json", "r", encoding="utf-8") as file:
@@ -127,29 +128,11 @@ class Multi_Eurlex(Dataset):
         :return: the data corresponding to the language parameter
         """
         self.label_options = self.load_label_options(language)
+        self.lang = language
         dataset = load_dataset(dataset_name, language, split='test', trust_remote_code=True)
-        if language == 'all_languages':
-            data = self.extract_text_all_languages(dataset)
-        else:
-            data = self.extract_text(dataset)
+        data = self.extract_text(dataset)
         inst = translate(language, self.prompt)
         return data[:points_per_language], self.label_options, inst
-
-    def extract_text_all_languages(self, dataset):
-        """
-        :param dataset: the dataset containing the text data
-        :return: a.py list of text data from all languages
-        """
-        data = []
-        count = 0
-        for item in dataset:
-            if count == 5:
-                break
-            documents = item['text']
-            texts = documents.keys()
-            data.append({"text:": text, "labels": item['labels']} for text in texts)
-            count += 1
-        return data
 
     def extract_text(self, dataset):
         """
@@ -176,6 +159,9 @@ class Multi_Eurlex(Dataset):
         :param label_options: the list of label options
         :return: a list of predicted labels for the generated text
         """
+        if self.llm_judge:
+            return [text for text in generated_texts]
+
         all_labels = []
         for text in generated_texts:
             labels = []
@@ -187,7 +173,50 @@ class Multi_Eurlex(Dataset):
 
         return all_labels
 
+
+    def extract_label_indices(self, response: str) -> list[int] | None:
+        response = response.strip().lower()
+
+        if 'none' in response:
+            return None
+
+        # Extract all numbers from the response
+        numbers = re.findall(r'\d+', response)
+        return [int(num) for num in numbers] if numbers else None
+
+
     def evaluate(self, true_labels, predicted_labels):
+        if self.llm_judge:
+            prompts = []
+            for pred_answer in predicted_labels:
+                pred_answer = pred_answer or ""
+                prompt = (
+                        "You are evaluating how well a model assigned labels to a text. "
+                        "Multiple labels may apply. The model may have responded using the label numbers, label names, or both. "
+                        f"All content (model answer and labels) is in {get_language_from_code(self.lang)}.\n\n"
+                        "Your task:\n"
+                        "- Use the numbered 'Labels' list below to determine which labels were identified in the model's answer.\n"
+                        "- Return only the numbers of the labels that the model has identified, separated by commas.\n"
+                        "- If no labels were identified, return 'None'.\n\n"
+                        f"Answer: {pred_answer.strip()}\n"
+                        "Labels:\n" +
+                        "\n".join(f"{i}: {label}" for i, label in enumerate(self.label_options)) + "\n\n"
+                                                                                                   "Labels identified:"
+                )
+                prompts.append(prompt)
+
+            # Batch call to judge
+            responses = self.llm_judge.judge(prompts)
+
+            # Extract labels from responses
+            labels = [self.extract_label_indices(resp) or [] for resp in responses]
+            predicted_labels = labels
+
+            store_judge(responses, labels, self.lang)
+
+        # Ensure predicted_labels has no None values
+        predicted_labels = [lbl if lbl is not None else [] for lbl in predicted_labels]
+
         mlb = MultiLabelBinarizer(classes=list(range(len(self.label_options))))
 
         # Binarize the true and predicted labels
@@ -200,6 +229,7 @@ class Multi_Eurlex(Dataset):
         # Filter binary_true and binary_pred to only include relevant labels
         filtered_binary_true = binary_true[:, relevant_labels]
         filtered_binary_pred = binary_pred[:, relevant_labels]
+
         # Calculate precision, recall, F1-score
         precision, recall, f1, _ = precision_recall_fscore_support(
             filtered_binary_true, filtered_binary_pred, average='macro', zero_division=0
@@ -212,6 +242,21 @@ class Multi_Eurlex(Dataset):
             "Length": len(true_labels)
         }
 
+    def normalize_labels(self, label_list):
+        normalized = []
+        for labels in label_list:
+            if isinstance(labels, str):
+                if labels.strip().lower() == "none" or labels.strip() == "":
+                    normalized.append([])
+                else:
+                    # Convert string "1, 2" → [1, 2]
+                    normalized.append([int(x.strip()) for x in labels.split(",")])
+            elif isinstance(labels, list):
+                normalized.append(labels)
+            else:
+                raise ValueError(f"Unrecognized label format: {labels}")
+        return normalized
+
     def evaluate_results(self, results, all_true, all_predicted):
         # Print out the results for each language
         for lang, metrics in results.items():
@@ -221,8 +266,8 @@ class Multi_Eurlex(Dataset):
             print(f"F1 Score: {metrics['F1 Score']}")
             print(f"Length: {metrics['Length']}")
             print("ENDMETRICS")
-            true_labels = all_true[lang]
-            predicted_labels = all_predicted[lang]
+            true_labels = self.normalize_labels(all_true[lang])
+            predicted_labels = self.normalize_labels(all_predicted[lang])
             for idx, label in enumerate(self.label_options):
                 tp = sum([1 for true, pred in zip(true_labels, predicted_labels) if idx in pred and idx in true])
                 fp = sum([1 for true, pred in zip(true_labels, predicted_labels) if idx in pred and idx not in true])
@@ -260,15 +305,16 @@ class Multi_Eurlex(Dataset):
                 file.write("Text\tTrue Labels\tPredicted Labels\n")
 
         # Write the first 10 samples' text, true labels, and predicted labels to the file
+        true_labels = self.normalize_labels(true_labels)
+        predicted_labels = self.normalize_labels(predicted_labels)
+
         with open(filename, 'a', encoding='utf-8') as file:
-            for i in range(min(10, len(first_ten_answers))):  # Ensure we don't go out of bounds
+            for i in range(min(10, len(first_ten_answers))):
                 text = first_ten_answers[i]
                 true_label_names = [label_options[idx] for idx in true_labels[i]]
                 predicted_label_names = [label_options[idx] for idx in predicted_labels[i]]
 
-                # Format the data to write
                 file.write(f"{text}\t{', '.join(true_label_names)}\t{', '.join(predicted_label_names)}\n\n\n")
-
 
 class Eur_Lex_Sum(Dataset):
     """
@@ -985,10 +1031,10 @@ class XQuAD(Dataset):
                     "You are evaluating how well a generated answer responds to a given question. "
                     f"All content is in {get_language_from_code(self.lang)}. Use the real (true) answer as a reference to determine what a correct answer should look like. "
                     "Your task is to rate how well the generated answer answers the question, based on meaning and correctness, using the following scale:\n\n"
-                    "3 - Fully answers the question with the same meaning as the real answer.\n"
-                    # "4 - Mostly answers the question with only minor differences from the real answer.\n"
-                    "2 - Answers the question partially or includes significant inaccuracies.\n"
-                    # "2 - Barely answers the question or includes significant inaccuracies.\n"
+                    "5 - Fully answers the question with the same meaning as the real answer.\n"
+                    "4 - Mostly answers the question with only minor differences from the real answer.\n"
+                    "3 - Answers the question partially or includes significant inaccuracies.\n"
+                    "2 - Barely answers the question or includes significant inaccuracies.\n"
                     "1 - Does not answer the question or is entirely incorrect.\n\n"
                     "Return only the number.\n\n"
                     f"Question: {question.strip()}\n"

@@ -119,7 +119,7 @@ for lang in languages:
     all_true[lang] = filtered_true
     all_predicted[lang] = filtered_predicted
 
-    if model_name.lower() == 'multi_eurlex':
+    if dataset_name.lower() == 'multi_eurlex':
         dataset.save_first_10_results_to_file_by_language(first_ten_answers, true, predicted, label_options, lang)
 
 try:
