@@ -175,6 +175,9 @@ class Multi_Eurlex(Dataset):
 
 
     def extract_label_indices(self, response: str) -> list[int] | None:
+        if not response or not isinstance(response, str):
+            return None
+
         response = response.strip().lower()
 
         if 'none' in response:

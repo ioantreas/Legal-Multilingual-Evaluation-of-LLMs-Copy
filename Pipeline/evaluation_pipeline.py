@@ -43,7 +43,7 @@ generation = bool(int(arguments[3]))
 model_name = arguments[4]
 api_key = None
 adversarial_attack = int(arguments[5])
-llm_judge_key = arguments
+llm_judge_key = arguments[6]
 if llm_judge_key == 'None':
     llm_judge_key = None
 if model_name == 'google':
