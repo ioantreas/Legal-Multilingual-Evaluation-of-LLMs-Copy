@@ -573,7 +573,7 @@ class Europa_Random_Split(Dataset):
 
                 prompt = (
                     "You are evaluating how well a generated list of keyphrases produced by a model summarizes a given text.\n"
-                    f"The content is in {get_language_from_code(self.lang)}. Use the real (reference) keyphrases as a gold standard.\n\n"
+                    f"The content is in {get_language_from_code(self.language)}. Use the real (reference) keyphrases as a gold standard.\n\n"
                     "Your task is to rate how well the generated keyphrases capture the meaning and key ideas of the text, using the following scale:\n\n"
                     "5 - Excellent: The keyphrases cover all essential topics and match the reference very closely in meaning.\n"
                     "4 - Good: Most important topics are covered with only minor omissions or differences.\n"
@@ -610,12 +610,12 @@ class Europa_Random_Split(Dataset):
                 else:
                     numeric_scores.append(0.0)
 
-            store_judge(scores, numeric_scores, self.lang)
+            store_judge(scores, numeric_scores, self.language)
 
-            return {
-                "LLM Similarity Score (1–5)": np.mean(numeric_scores) if numeric_scores else 0.0
-            }
-        else:
+        #     return {
+        #         "LLM Similarity Score (1–5)": np.mean(numeric_scores) if numeric_scores else 0.0
+        #     }
+        # else:
             metrics = {
                 "F1@5": [],
                 "F1@10": [],
@@ -646,6 +646,8 @@ class Europa_Random_Split(Dataset):
 
             # Aggregate metrics across all instances
             aggregated_metrics = {metric: sum(scores) / len(scores) if scores else 0.0 for metric, scores in metrics.items()}
+
+            aggregated_metrics["LLM Similarity Score"] = np.mean(numeric_scores) if numeric_scores else 0.0
 
             return aggregated_metrics
 
