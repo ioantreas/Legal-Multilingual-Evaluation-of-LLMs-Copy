@@ -109,7 +109,7 @@ class Multi_Eurlex(Dataset):
     def __init__(self, llm_judge):
         self.prompt = (
             "<|endoftext|>\nTask: You are given a legal document. Your task is to assign the most relevant labels from the list below. "
-            "You may select multiple labels, but only include those that are truly relevant. "
+            "You may select multiple labels, but only include those that are relevant. "
             "List the label **numbers only**, in order of importance (most important first). "
             "Do not include any text other than the selected numbers. (You can select more than one):"
         )
@@ -193,25 +193,28 @@ class Multi_Eurlex(Dataset):
 
     def extract_labels_from_generated_text(self, generated_texts):
         """
-        :param generated_text: the generated text
-        :param label_options: the list of label options
-        :return: a list of predicted labels for the generated text
+        :param generated_texts: list of generated texts
+        :return: a list of predicted labels for each generated text, in order of appearance
         """
         if self.llm_judge:
             return [text for text in generated_texts]
 
         all_labels = []
         for text in generated_texts:
-            labels = []
             if not isinstance(text, str):
                 all_labels.append([])
                 continue
 
+            # Build a list of (position, label) tuples
+            matches = []
             for i in range(len(self.label_options)):
-                # Use regex to match only whole words for each index, avoiding partial matches
-                if re.search(rf'\b{i}\b', text):
-                    labels.append(i)
-            all_labels.append(labels)
+                # Match whole word using word boundaries
+                for match in re.finditer(rf'\b{i}\b', text):
+                    matches.append((match.start(), i))
+
+            # Sort by position and extract labels in order
+            ordered_labels = [label for _, label in sorted(matches)]
+            all_labels.append(ordered_labels)
 
         return all_labels
 
