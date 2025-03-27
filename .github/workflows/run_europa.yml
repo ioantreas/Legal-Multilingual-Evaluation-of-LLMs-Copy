@@ -1,4 +1,4 @@
-name: Run Multi_Eur_Lex Pipeline 
+name: Run Europa Pipeline 
 
 on:
   workflow_dispatch:  # Manual trigger
