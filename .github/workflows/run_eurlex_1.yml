@@ -26,7 +26,7 @@ jobs:
           LLM_JUDGE_KEY: ${{ secrets.GEMINI_API_KEY_1 }}
         working-directory: Pipeline
         run: |
-          python evaluation_pipeline.py multi_eurlex "['en', 'el', 'bg', 'mt', 'fr', 'sv']" 200  0 google 0 'None' 'AIzaSyBFRnlVecwK7F_h4XoPy3pXuBqfex4TDSI'
+          python evaluation_pipeline.py multi_eurlex "['en', 'el', 'bg', 'mt', 'fr', 'sv']" 200  0 google 0 'None' $LLM_JUDGE_KEY $GEMINI_API_KEY
 
       - name: Upload results
         uses: actions/upload-artifact@v4
