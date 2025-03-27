@@ -440,7 +440,7 @@ def nlpaug_attack(text, lang, attack_type):
     elif attack_type == 14:
         # Contextual word embeddings using BERT
         bert_model = LANG_TO_MODEL.get(lang, 'bert-base-multilingual-uncased')
-        contextual_aug = naw.ContextualWordEmbsAug(model_path=bert_model, action="substitute")
+        contextual_aug = naw.ContextualWordEmbsAug(model_path=bert_model, action="substitute", aug_p=0.1)
         augmented_text = contextual_aug.augment(text)
 
     else:
