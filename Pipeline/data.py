@@ -203,6 +203,10 @@ class Multi_Eurlex(Dataset):
         all_labels = []
         for text in generated_texts:
             labels = []
+            if not isinstance(text, str):
+                all_labels.append([])
+                continue
+
             for i in range(len(self.label_options)):
                 # Use regex to match only whole words for each index, avoiding partial matches
                 if re.search(rf'\b{i}\b', text):
