@@ -108,11 +108,15 @@ class Multi_Eurlex(Dataset):
 
     def __init__(self, llm_judge):
         self.prompt = (
-            "<|endoftext|>\nTask: You are given a legal document. Your task is to assign the most relevant labels from the list below. "
-            "You may select multiple labels, but only include those that are relevant. "
-            "List the label **numbers only**, in order of importance (most important first). "
-            "Do not include any text other than the selected numbers. (You can select more than one):"
+            "<|endoftext|>\n\n\nYou are a legal document classifier. Above is a legal document and below is a list of possible labels.\n"
+            "Your task is to assign the most relevant labels based on the content of the document.\n"
+            "- You may select multiple labels.\n"
+            "- Only select relevant ones.\n"
+            "Return **only the label numbers**, separated by commas, in order of importance (most important first).\n"
+            "- Do not explain your answer or include any other text.\n\n"
+            "Label Options:\n"
         )
+
         self.llm_judge = llm_judge
 
     def load_label_options(self, lang):
