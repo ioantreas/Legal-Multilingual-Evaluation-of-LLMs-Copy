@@ -232,7 +232,7 @@ class Google(Model):
         self.generation = generation
         self.multi_class = multi_class
         ggai.configure(api_key=api_key)
-        self.model = ggai.GenerativeModel('gemini-1.5-flash')
+        self.model = ggai.GenerativeModel('gemini-2.0-flash')
 
     def generate_text(self, prompt):
         # Generate the text using the model
