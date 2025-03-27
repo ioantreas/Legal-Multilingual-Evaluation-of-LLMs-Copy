@@ -1,4 +1,4 @@
-name: Run Europa Pipeline 
+name: Run Europa Pipeline Attack first half
 
 on:
   workflow_dispatch:  # Manual trigger
