@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\Documents\GitHub\Legal-Multilingual-Evaluation-of-LLMs-Copy\Pipeline\evaluation_pipeline.py", line 57, in <module>
+    dataset = Dataset.get_dataset(dataset_name, llm_judge)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Gebruiker\Documents\GitHub\Legal-Multilingual-Evaluation-of-LLMs-Copy\Pipeline\data.py", line 77, in get_dataset
+    raise ValueError(f"Dataset '{name}' is not available")
+ValueError: Dataset 'covid19' is not available
