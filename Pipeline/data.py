@@ -903,7 +903,7 @@ class OnlineTermsOfServiceDataset(Dataset):
         return [int(numbers[0])] if numbers else None
 
     def evaluate(self, true_labels, predicted_labels):
-        y_true = [lbl[0] if lbl else None for lbl in predicted_labels]
+        y_true = [lbl[0] if lbl else None for lbl in true]
         y_pred = [lbl[0] if lbl else None for lbl in predicted_labels]
 
         confusion_counter = Counter()
